@@ -49,6 +49,15 @@ See `addon/docker-sidecar/docker-compose.example.yml`.
 State file:
 - `config/data/grocy-product-helper-state.json`
 
+Payload files:
+- `config/data/custom_js_product_helper.html`
+- `config/data/custom_js_nerdstats.html` (when core addon is installed)
+
+Composed active file:
+- `config/data/custom_js.html`
+
+Install/update scripts now compose the active file automatically so both addons can run independently or together.
+
 ## Split note
 
 Stats/charts dashboard is maintained in:

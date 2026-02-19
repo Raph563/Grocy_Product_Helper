@@ -17,6 +17,16 @@ The analytics dashboard remains in: https://github.com/Raph563/Grocy
 - GitHub release workflow (stable + alpha)
 - Ready-to-run VPS update command path
 
+## Co-Install Support
+
+This addon now installs to its own payload file and composes `custom_js.html` with NerdStats automatically.
+
+- NerdStats payload: `config/data/custom_js_nerdstats.html`
+- Product Helper payload: `config/data/custom_js_product_helper.html`
+- Active composed file: `config/data/custom_js.html`
+
+So users can install NerdStats only, Product Helper only, or both on the same Grocy instance.
+
 ## Architecture
 
 ![Architecture](docs/images/architecture.svg)
@@ -64,6 +74,8 @@ docker compose -f docker-compose.example.yml up --build
 
 The sidecar writes state to:
 - `config/data/grocy-product-helper-state.json`
+- payload file: `config/data/custom_js_product_helper.html`
+- composed active file: `config/data/custom_js.html`
 
 ## VPS Pattern (Contabo/Ubuntu)
 
@@ -92,7 +104,7 @@ Expected zip asset name:
 - `Grocy` repo: stats/charts core
 - `Grocy_Product_Helper` repo: product workflow tools
 
-If you need both on one instance, run one payload at a time in `config/data/custom_js.html`.
+If both addons are installed, composition is automatic through the install/update scripts.
 
 ## Documentation
 

@@ -17,5 +17,5 @@
 
   <rect x="140" y="300" width="700" height="80" rx="10" fill="#334155"/>
   <text x="160" y="337" fill="#f8fafc" font-size="18" font-family="Segoe UI, Arial">Grocy runtime target: config/data/custom_js.html</text>
-  <text x="160" y="363" fill="#cbd5e1" font-size="14" font-family="Segoe UI, Arial">Install one payload at a time, update through scripts or docker sidecar.</text>
+  <text x="160" y="363" fill="#cbd5e1" font-size="14" font-family="Segoe UI, Arial">Each addon installs to its own payload, then composes custom_js.html together.</text>
 </svg>

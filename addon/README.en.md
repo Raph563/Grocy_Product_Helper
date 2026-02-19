@@ -13,6 +13,8 @@ Dedicated addon pack for Grocy product helper features.
 ## Local state
 
 - `config/data/grocy-product-helper-state.json`
+- `config/data/custom_js_product_helper.html`
+- `config/data/custom_js.html` (composed active file)
 
 ## Install
 
