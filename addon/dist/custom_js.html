@@ -127,6 +127,7 @@
     productEnergyRobotRefresh: null,
     productEnergyRobotObserver: null,
     productBarcodesHeaderRefresh: null,
+    productConversionFractionObserver: null,
     barcodeAutofillObserver: null,
     productFormTypeRulesRefresh: null,
     productFormRuleSyncing: false,
@@ -719,14 +720,14 @@
   const USER_DATA_TRANSFER_SCHEMA = 'statnerd-user-data';
   const USER_DATA_TRANSFER_SCHEMA_VERSION = 1;
   const USER_DATA_TRANSFER_STORAGE_PREFIX = 'grocy_dash_';
-  const ADDON_RUNTIME_VERSION = '2.2.0';
-  const ADDON_UPDATE_DEFAULT_REPOSITORY = 'Raph563/Grocy';
+  const ADDON_RUNTIME_VERSION = '1.1.0';
+  const ADDON_UPDATE_DEFAULT_REPOSITORY = 'Raph563/Grocy_Product_Helper';
   const ADDON_UPDATE_DEFAULT_LOCAL_ROOT = 'C:\\Users\\Admin\\Documents\\Docker\\grocy';
   const ADDON_UPDATE_RELAY_BASE_URL = 'http://127.0.0.1:17863';
   const ADDON_UPDATE_PRERELEASE_VISIBLE_LIMIT = 5;
   const NO_DUE_SENTINEL_DATE = '2999-12-31';
   const STATNERD_AUTHOR_NAME = 'Raph563';
-  const STATNERD_REPO_URL = 'https://github.com/Raph563/Grocy';
+  const STATNERD_REPO_URL = 'https://github.com/Raph563/Grocy_Product_Helper';
   const STATNERD_CHANGELOG_URL = `${STATNERD_REPO_URL}/blob/main/CHANGELOG.md`;
   const STATNERD_DOCS_URL = `${STATNERD_REPO_URL}/tree/main/docs`;
   const BARCODE_LOOKUP_PROVIDER_IDS = ['openfoodfacts', 'openproductsfacts'];
@@ -1922,7 +1923,7 @@
       barcode_header_open_off_title: 'Ouvrir OFF (OpenFoodFacts) pour ce produit',
       barcode_header_open_opf_title: 'Ouvrir OPF (OpenProductsFacts) pour ce produit',
       barcode_header_google_title: 'Rechercher sur Google + fournisseur actif',
-      barcode_header_robot_title: 'Créer automatiquement un code-barres (OFF/OPF -> Grocy)',
+      barcode_header_robot_title: 'Rechercher une fiche code-barres (OFF/OPF -> Grocy)',
       barcode_header_robot_need_product_id: 'ID produit introuvable sur cette page.',
       barcode_header_robot_need_unit: 'Unité d\'achat introuvable. Vérifie "Unité d\'achat par défaut".',
       barcode_header_robot_running: 'Robot: recherche en cours…',
@@ -2585,7 +2586,7 @@
       barcode_header_open_off_title: 'Open OFF (OpenFoodFacts) for this product',
       barcode_header_open_opf_title: 'Open OPF (OpenProductsFacts) for this product',
       barcode_header_google_title: 'Search on Google + active provider',
-      barcode_header_robot_title: 'Auto-create barcode (OFF/OPF -> Grocy)',
+      barcode_header_robot_title: 'Search a barcode card (OFF/OPF -> Grocy)',
       barcode_header_robot_need_product_id: 'Product ID not found on this page.',
       barcode_header_robot_need_unit: 'Purchase unit not found. Check "Default quantity unit purchase".',
       barcode_header_robot_running: 'Robot: searching…',
@@ -3385,6 +3386,20 @@
     }
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
+  }
+
+  function parsePositiveFraction(valueInput = '') {
+    const raw = clean(valueInput || '');
+    if (!raw || !raw.includes('/')) return null;
+    const match = raw.match(/^\s*([+-]?\d+(?:[.,]\d+)?)\s*\/\s*([+-]?\d+(?:[.,]\d+)?)\s*$/);
+    if (!match) return null;
+    const numerator = num(match[1]);
+    const denominator = num(match[2]);
+    if (!(Number.isFinite(numerator) && Number.isFinite(denominator))) return null;
+    if (!(numerator > 0) || !(denominator > 0)) return null;
+    const value = numerator / denominator;
+    if (!(Number.isFinite(value) && value > 0)) return null;
+    return { numerator, denominator, value };
   }
 
   const fmt = (v, d = 2) => (Number.isFinite(v) ? v : 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -25545,6 +25560,15 @@
         gap: 0.1rem;
         min-width: 0;
       }
+      #grocy-barcode-header-robot-card .grocy-barcode-robot-card-actions {
+        margin-top: 0.32rem;
+      }
+      .grocy-product-conversion-fraction-wrap {
+        margin-top: 0.4rem;
+      }
+      .grocy-product-conversion-fraction-wrap .grocy-product-conversion-fraction-status {
+        margin-top: 0.2rem;
+      }
       .grocy-off-btn-sm {
         min-width: 2rem;
         height: 1.75rem;
@@ -26877,6 +26901,7 @@
     try {
       if (source === 'no_own_stock') {
         const desired = !!(noOwnStock && noOwnStock.checked);
+        if (!desired) return;
         if (parentSource && parentSource.checked !== desired) {
           parentSource.checked = desired;
         }
@@ -27661,7 +27686,10 @@
             <span class="small">${escapeHtml(langText('Code-barres', 'Barcode'))}: ${escapeHtml(code)}</span>
             ${brandName ? `<span class="small">${escapeHtml(langText('Marque', 'Brand'))}: ${escapeHtml(brandName)}</span>` : ''}
             ${quantityLabel ? `<span class="small">${escapeHtml(langText('Poids/quantité', 'Weight/quantity'))}: ${escapeHtml(quantityLabel)}</span>` : ''}
-            <span class="small text-info">${escapeHtml(langText('Création automatique activée (recherche avancée).', 'Automatic creation enabled (advanced lookup).'))}</span>
+            <span class="small text-info">${escapeHtml(langText('Sélection requise: clique la fiche pour ajouter le code-barres.', 'Selection required: click the card to add the barcode.'))}</span>
+            <span class="grocy-barcode-robot-card-actions">
+              <button type="button" class="btn btn-primary btn-sm" data-facts-robot-confirm="1">${escapeHtml(langText('Sélectionner cette fiche', 'Select this card'))}</button>
+            </span>
           </span>
         </div>
         <div class="mt-1">
@@ -27987,7 +28015,7 @@
             imageUrl: sourceImageUrl,
           });
           setHeadingStatus(
-            langText('2/3 Fiche OFF/OPF trouvée. Création automatique en cours…', '2/3 OFF/OPF product card found. Automatic creation in progress...'),
+            langText('2/3 Fiche OFF/OPF prête. Clique sur la fiche pour confirmer la création.', '2/3 OFF/OPF product card ready. Click the card to confirm creation.'),
             'info',
             [
               `${langText('Code trouvé', 'Found barcode')}: ${best.code}`,
@@ -27998,21 +28026,6 @@
               `${langText('Fournisseurs tentés', 'Attempted providers')}: ${(attemptedProviders.map((id) => barcodeLookupProviderLabel(id)).join(' -> ') || t('default_na'))}`,
             ]
           );
-          await createProductBarcodeViaApi({
-            productId,
-            barcode: best.code,
-            quId: purchaseUnitId,
-            amount,
-            shoppingLocationId: null,
-          });
-          const providers = attemptedProviders.map((providerId) => barcodeLookupProviderLabel(providerId)).join(' + ');
-          setHeadingStatus(t('barcode_header_robot_created', {
-            code: best.code,
-            unit: purchaseUnitName,
-            amount: fmt(amount, amount % 1 === 0 ? 0 : 3),
-            providers,
-          }), 'success');
-          shouldReload = true;
         } catch (error) {
           const msg = clean(error && error.message ? error.message : String(error));
           finalError = msg || t('focus_unknown_error');
@@ -28041,7 +28054,7 @@
             `${langText('Quantité prévue', 'Planned amount')}: ${createdAmount > 0 ? fmt(createdAmount, createdAmount % 1 === 0 ? 0 : 3) : t('default_na')}`,
             `${langText('Fournisseurs configurés', 'Configured providers')}: ${configuredProviderOrder.map((id) => barcodeLookupProviderLabel(id)).join(' -> ') || t('default_na')}`,
             `${langText('Fournisseurs tentés', 'Attempted providers')}: ${(attemptedProviders.map((id) => barcodeLookupProviderLabel(id)).join(' -> ') || t('default_na'))}`,
-            `${langText('Résultat', 'Result')}: ${shouldReload ? langText('Créé', 'Created') : langText('Échec', 'Failed')}`,
+            `${langText('Résultat', 'Result')}: ${pendingHeaderRobotSelection && pendingHeaderRobotSelection.code ? langText('En attente de sélection utilisateur', 'Waiting for user selection') : (shouldReload ? langText('Créé', 'Created') : langText('Échec', 'Failed'))}`,
           ];
           if (finalError) {
             detailLines.push(`${langText('Erreur finale', 'Final error')}: ${finalError}`);
@@ -28628,12 +28641,213 @@
     S.barcodeAutofillObserver.observe(document.body, { childList: true, subtree: true });
   }
 
+  function productSpecificConversionFactorInputs(root = document) {
+    if (!isProductFormPage()) return [];
+    const scope = root && root.querySelectorAll ? root : document;
+    const hasProductConversionsTable = !!document.getElementById('qu-conversions-table-products');
+    const out = [];
+    const seen = new Set();
+    const selectors = [
+      'input[name="factor"]',
+      'input#factor',
+      'input[id*="factor"]',
+    ];
+    selectors.forEach((selector) => {
+      const nodes = scope.querySelectorAll(selector);
+      nodes.forEach((input) => {
+        if (!input || seen.has(input)) return;
+        seen.add(input);
+        if (input.closest && input.closest('form#barcode-form')) return;
+        const form = input.form || input.closest('form');
+        if (!form) return;
+        if (form.closest && form.closest('form#barcode-form')) return;
+        const fromSelect = form.querySelector('select[name="from_qu_id"], select[id*="from_qu_id"], select[name*="from_qu_id"]');
+        const toSelect = form.querySelector('select[name="to_qu_id"], select[id*="to_qu_id"], select[name*="to_qu_id"]');
+        if (!fromSelect || !toSelect) return;
+        const hasProductId = !!form.querySelector('input[name="product_id"], input[id*="product_id"], select[name="product_id"], select[id*="product_id"]');
+        if (!hasProductId && !hasProductConversionsTable) return;
+        out.push(input);
+      });
+    });
+    return out;
+  }
+
+  function applyFractionToConversionFactorInput(factorInput, fractionRawInput = '', statusNode = null, optionsInput = null) {
+    const options = optionsInput && typeof optionsInput === 'object' ? optionsInput : {};
+    const raw = clean(fractionRawInput || '');
+    const silent = options.silent === true;
+    if (!factorInput || !raw) {
+      if (!silent && statusNode) setBarcodeAutofillStatus(statusNode, '', 'muted');
+      return null;
+    }
+    const parsed = parsePositiveFraction(raw);
+    if (!parsed) {
+      if (!silent && statusNode) {
+        setBarcodeAutofillStatus(
+          statusNode,
+          langText('Fraction invalide. Format attendu: 1/6, 2/3, 6/1.', 'Invalid fraction. Expected format: 1/6, 2/3, 6/1.'),
+          'danger'
+        );
+      }
+      return null;
+    }
+    const decimal = num(parsed.value.toFixed(12));
+    if (!(decimal > 0)) return null;
+    factorInput.value = String(decimal);
+    factorInput.dispatchEvent(new Event('input', { bubbles: true }));
+    factorInput.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!silent && statusNode) {
+      setBarcodeAutofillStatus(
+        statusNode,
+        langText(`Fraction appliquée: ${raw} -> ${fmt(decimal, 6)}`, `Fraction applied: ${raw} -> ${fmt(decimal, 6)}`),
+        'success'
+      );
+    }
+    return decimal;
+  }
+
+  function bindProductSpecificConversionFractionInput(factorInput) {
+    const factor = factorInput && factorInput.nodeType === 1 ? factorInput : null;
+    if (!factor) return;
+    if (factor.dataset.grocyFractionBound === '1') return;
+    factor.dataset.grocyFractionBound = '1';
+
+    const form = factor.form || factor.closest('form');
+    if (!form) return;
+
+    const container = factor.closest('.form-group') || factor.closest('.input-group') || factor.parentElement;
+    if (!container || !container.parentNode) return;
+
+    let factorTargetId = clean(factor.id || '');
+    if (!factorTargetId) {
+      factorTargetId = `grocy-conv-factor-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      factor.id = factorTargetId;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'grocy-product-conversion-fraction-wrap';
+    wrapper.setAttribute('data-grocy-conversion-fraction-wrap', '1');
+    wrapper.setAttribute('data-grocy-factor-target', factorTargetId);
+    wrapper.innerHTML = `
+      <label class="small mb-1 d-block text-muted">${escapeHtml(langText('Fraction de conversion (optionnel)', 'Conversion fraction (optional)'))}</label>
+      <input type="text" class="form-control form-control-sm" data-grocy-conversion-fraction-input="1" placeholder="1/6">
+      <div class="small text-muted mt-1">${escapeHtml(langText('Exemples: 1/6, 2/3, 6/1. La fraction est convertie en décimal.', 'Examples: 1/6, 2/3, 6/1. Fraction is converted to decimal.'))}</div>
+      <div class="small text-muted grocy-product-conversion-fraction-status" data-grocy-conversion-fraction-status="1"></div>
+    `;
+    container.insertAdjacentElement('afterend', wrapper);
+
+    const fractionInput = wrapper.querySelector('[data-grocy-conversion-fraction-input="1"]');
+    const statusNode = wrapper.querySelector('[data-grocy-conversion-fraction-status="1"]');
+    if (!fractionInput) return;
+
+    const applyFromFractionInput = () => {
+      const raw = clean(fractionInput.value || '');
+      if (!raw) {
+        if (statusNode) setBarcodeAutofillStatus(statusNode, '', 'muted');
+        return;
+      }
+      applyFractionToConversionFactorInput(factor, raw, statusNode);
+    };
+
+    const normalizeFactorSlashInput = () => {
+      const raw = clean(factor.value || '');
+      if (!raw || !raw.includes('/')) return;
+      const applied = applyFractionToConversionFactorInput(factor, raw, statusNode);
+      if (applied && !clean(fractionInput.value || '')) {
+        fractionInput.value = raw;
+      }
+    };
+
+    fractionInput.addEventListener('change', applyFromFractionInput);
+    fractionInput.addEventListener('blur', applyFromFractionInput);
+    factor.addEventListener('change', normalizeFactorSlashInput);
+    factor.addEventListener('blur', normalizeFactorSlashInput);
+
+    if (form.dataset.grocyFractionSubmitBound !== '1') {
+      form.dataset.grocyFractionSubmitBound = '1';
+      form.addEventListener('submit', (event) => {
+        const rawFactorInputs = form.querySelectorAll('input[name="factor"], input#factor, input[id*="factor"]');
+        for (const rawFactorInput of rawFactorInputs) {
+          const rawValue = clean(rawFactorInput && rawFactorInput.value ? rawFactorInput.value : '');
+          if (!rawValue || !rawValue.includes('/')) continue;
+          const parsedRaw = parsePositiveFraction(rawValue);
+          if (!parsedRaw) {
+            event.preventDefault();
+            event.stopPropagation();
+            rawFactorInput.focus();
+            return;
+          }
+          applyFractionToConversionFactorInput(rawFactorInput, rawValue, null, { silent: true });
+        }
+
+        const helpers = form.querySelectorAll('[data-grocy-conversion-fraction-wrap="1"]');
+        for (const helper of helpers) {
+          const input = helper.querySelector('[data-grocy-conversion-fraction-input="1"]');
+          const status = helper.querySelector('[data-grocy-conversion-fraction-status="1"]');
+          if (!input) continue;
+          const value = clean(input.value || '');
+          if (!value) continue;
+          const parsed = parsePositiveFraction(value);
+          if (!parsed) {
+            if (status) {
+              setBarcodeAutofillStatus(
+                status,
+                langText('Fraction invalide. Corrige avant de sauvegarder.', 'Invalid fraction. Fix before saving.'),
+                'danger'
+              );
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            input.focus();
+            return;
+          }
+          const targetId = clean(helper.getAttribute('data-grocy-factor-target') || '');
+          const targetFactorInput = targetId ? document.getElementById(targetId) : factor;
+          applyFractionToConversionFactorInput(targetFactorInput, value, status, { silent: true });
+        }
+      });
+    }
+  }
+
+  function initProductSpecificConversionFractionSupport(root = document) {
+    if (!isProductFormPage()) {
+      if (S.productConversionFractionObserver) {
+        try { S.productConversionFractionObserver.disconnect(); } catch (_err) {}
+        S.productConversionFractionObserver = null;
+      }
+      return;
+    }
+    productSpecificConversionFactorInputs(root).forEach((factorInput) => {
+      bindProductSpecificConversionFractionInput(factorInput);
+    });
+  }
+
+  function initProductSpecificConversionFractionObserver() {
+    if (!isProductFormPage()) return;
+    if (S.productConversionFractionObserver) return;
+    if (!document.body || !window.MutationObserver) return;
+    S.productConversionFractionObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        const nodes = Array.from(mutation.addedNodes || []);
+        for (const node of nodes) {
+          if (!node || node.nodeType !== 1) continue;
+          if (node.querySelector) {
+            initProductSpecificConversionFractionSupport(node);
+          }
+        }
+      }
+    });
+    S.productConversionFractionObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
   function initProductOpenFoodFactsEnhancements() {
     patchUserfieldsFormSaveForProductForm();
     initProductFormTypeRules();
     initProductEnergyVisibilityGuard();
     initProductEnergyRobotButton();
     initProductBarcodesHeaderButtons();
+    initProductSpecificConversionFractionSupport(document);
+    initProductSpecificConversionFractionObserver();
     initBarcodeAutofillButtons(document);
     initBarcodeAutofillObserver();
     if (typeof S.productFormTypeRulesRefresh === 'function') {
