@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="320" viewBox="0 0 980 320">
+  <rect width="980" height="320" fill="#111827"/>
+  <text x="40" y="48" fill="#e5e7eb" font-size="26" font-family="Segoe UI, Arial">Docker Sidecar Flow</text>
+
+  <rect x="40" y="90" width="250" height="120" rx="12" fill="#1f2937" stroke="#6b7280"/>
+  <text x="60" y="130" fill="#f3f4f6" font-size="18" font-family="Segoe UI, Arial">Addon image</text>
+  <text x="60" y="158" fill="#d1d5db" font-size="14" font-family="Segoe UI, Arial">/addon/dist/custom_js.html</text>
+
+  <rect x="365" y="90" width="250" height="120" rx="12" fill="#1f2937" stroke="#6b7280"/>
+  <text x="385" y="130" fill="#f3f4f6" font-size="18" font-family="Segoe UI, Arial">Sidecar container</text>
+  <text x="385" y="158" fill="#d1d5db" font-size="14" font-family="Segoe UI, Arial">entrypoint.sh install/update</text>
+
+  <rect x="690" y="90" width="250" height="120" rx="12" fill="#1f2937" stroke="#6b7280"/>
+  <text x="710" y="130" fill="#f3f4f6" font-size="18" font-family="Segoe UI, Arial">Grocy config volume</text>
+  <text x="710" y="158" fill="#d1d5db" font-size="14" font-family="Segoe UI, Arial">/config/data/custom_js.html</text>
+
+  <line x1="290" y1="150" x2="365" y2="150" stroke="#60a5fa" stroke-width="3"/>
+  <polygon points="365,150 352,143 352,157" fill="#60a5fa"/>
+
+  <line x1="615" y1="150" x2="690" y2="150" stroke="#34d399" stroke-width="3"/>
+  <polygon points="690,150 677,143 677,157" fill="#34d399"/>
+</svg>

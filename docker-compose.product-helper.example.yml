@@ -1,0 +1,28 @@
+services:
+  grocy:
+    image: lscr.io/linuxserver/grocy:latest
+    container_name: grocy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - ./config:/config
+    ports:
+      - "9283:80"
+    restart: unless-stopped
+
+  grocy-product-helper:
+    image: ghcr.io/raph563/grocy-product-helper-sidecar:latest
+    container_name: grocy-product-helper-installer
+    depends_on:
+      - grocy
+    environment:
+      - GROCY_CONFIG_PATH=/grocy-config
+      - ADDON_SOURCE=/addon/dist/custom_js.html
+      - BACKUP_ENABLED=true
+      - STATE_FILENAME=grocy-product-helper-state.json
+      - KEEP_ALIVE=true
+    volumes:
+      - ./config:/grocy-config
+    restart: unless-stopped
