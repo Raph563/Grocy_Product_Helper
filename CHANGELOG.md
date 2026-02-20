@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.1] - 2026-02-20
+
+- Fixed Product Helper settings freeze on `/stocksettings?producthelper=1` by removing persistent overlay mutation-observer loops.
+- Overlay visibility on settings pages is now enforced once (no recursive style/class mutation watchers).
+
 ## [1.3.0] - 2026-02-20
 
 - Added dedicated settings page rendering for Product Helper on `/stocksettings?producthelper=1` to avoid legacy overlay race conditions.
