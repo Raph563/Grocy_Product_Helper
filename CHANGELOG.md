@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2] - 2026-02-20
+
+- Strengthened settings-overlay anti-hide protection:
+  - overlay is forced visible while open, even when external scripts toggle classes/styles.
+  - added root DOM observer to restore the overlay if another script removes it from the DOM.
+- Improves compatibility with external "hide legacy addon buttons/overlays" toggles.
+
 ## [1.2.1] - 2026-02-19
 
 - Fixed shell compose permission handling so `config/data/custom_js.html` stays readable by Grocy runtime even when install/update/uninstall scripts are executed as `root` with restrictive umask.
