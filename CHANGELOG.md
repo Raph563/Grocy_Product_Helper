@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0] - 2026-02-20
+
+- Added dedicated settings page rendering for Product Helper on `/stocksettings?producthelper=1` to avoid legacy overlay race conditions.
+- Restricted heavy initialization to relevant pages only:
+  - settings runtime only on Product Helper settings page.
+  - product assistants only on product/form pages.
+- Disabled runtime addon state-file probe loops (`*-addon-state.json`) to remove repeated 404 noise and unnecessary network traffic.
+- Wrapped addon installed-version refresh in async-safe guarded execution to avoid unhandled startup promise failures.
+- Removed global deep DOM observer hot path for settings overlay to reduce mutation overhead and Firefox slowdown/crash risk.
+
 ## [1.2.2] - 2026-02-20
 
 - Strengthened settings-overlay anti-hide protection:
